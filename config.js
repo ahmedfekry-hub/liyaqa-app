@@ -1,8 +1,8 @@
 window.LIYAQA_CONFIG = {
-  supabaseUrl: "YOUR_SUPABASE_URL",
-  supabaseAnonKey: "YOUR_SUPABASE_ANON_KEY",
+  supabaseUrl: "https://abc123.supabase.co",
+  supabaseAnonKey: "sb_publishable_xxxxxxxxx",
   stripeLinks: {
-    premium_monthly: "https://...",
-    premium_yearly: "https://..."
+    premium_monthly: "",
+    premium_yearly: ""
   }
 };
