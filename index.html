@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لياقة | Liyaqa</title>
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script defer src="./config.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div id="appShell" class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">ل</div>
+        <div>
+          <h1>لياقة</h1>
+          <p>Fitness & Wellness</p>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <button class="nav-link active" data-view="dashboard">الرئيسية</button>
+        <button class="nav-link" data-view="workouts">التمارين</button>
+        <button class="nav-link" data-view="nutrition">التغذية</button>
+        <button class="nav-link" data-view="progress">الإحصائيات</button>
+        <button class="nav-link" data-view="subscription">الاشتراك</button>
+        <button class="nav-link admin-only hidden" data-view="admin">الإدارة</button>
+      </nav>
+
+      <div class="sidebar-card subtle">
+        <span class="eyebrow">الخطة الحالية</span>
+        <strong id="planBadge">Free</strong>
+        <p id="planStatusText">ابدأ بالخطة المجانية ثم فعّل اشتراكك.</p>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div>
+          <h2 id="viewTitle">لوحة اليوم</h2>
+          <p id="welcomeText">جاهز ليوم صحي ومتوازن؟</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="themeToggle" class="ghost-btn">🌙 الوضع الداكن</button>
+          <button id="logoutBtn" class="ghost-btn hidden">تسجيل الخروج</button>
+        </div>
+      </header>
+
+      <section id="authView" class="view active">
+        <div class="auth-grid">
+          <div class="auth-card hero-auth">
+            <span class="eyebrow">Commercial Starter</span>
+            <h3>ابدأ منتج لياقة تجاري فعلي</h3>
+            <p>تسجيل دخول، قاعدة بيانات، خطط اشتراك، وصلاحيات إدارة — كلها ضمن نفس المنتج.</p>
+            <ul class="feature-list">
+              <li>حساب مستخدم فعلي عبر البريد وكلمة المرور</li>
+              <li>حفظ البيانات في قاعدة بيانات Supabase</li>
+              <li>ربط اشتراكات Stripe بخطط شهرية وسنوية</li>
+              <li>لوحة إدارة للمشرفين</li>
+            </ul>
+          </div>
+
+          <div class="auth-card form-auth">
+            <div class="tabs">
+              <button class="tab active" data-auth-tab="login">تسجيل الدخول</button>
+              <button class="tab" data-auth-tab="register">إنشاء حساب</button>
+            </div>
+
+            <form id="loginForm" class="auth-form active">
+              <label>البريد الإلكتروني
+                <input type="email" id="loginEmail" required placeholder="name@email.com" />
+              </label>
+              <label>كلمة المرور
+                <input type="password" id="loginPassword" required placeholder="********" />
+              </label>
+              <button class="primary-btn" type="submit">دخول</button>
+            </form>
+
+            <form id="registerForm" class="auth-form hidden">
+              <label>الاسم الكامل
+                <input type="text" id="registerName" required placeholder="أحمد فخري" />
+              </label>
+              <label>البريد الإلكتروني
+                <input type="email" id="registerEmail" required placeholder="name@email.com" />
+              </label>
+              <label>كلمة المرور
+                <input type="password" id="registerPassword" required placeholder="********" minlength="8" />
+              </label>
+              <label>الهدف الصحي
+                <select id="registerGoal">
+                  <option value="weight_loss">خفض الوزن</option>
+                  <option value="fitness">لياقة عامة</option>
+                  <option value="muscle">بناء عضل</option>
+                  <option value="wellness">عافية يومية</option>
+                </select>
+              </label>
+              <button class="primary-btn" type="submit">إنشاء الحساب</button>
+            </form>
+
+            <p class="tiny-note">بعد تفعيل البريد من Supabase يمكنك تسجيل الدخول مباشرة.</p>
+            <div id="authMsg" class="message-box"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="appViews" class="hidden">
+        <section id="dashboard" class="view active app-view">
+          <div class="grid two-three">
+            <div class="panel hero-panel">
+              <div class="panel-header">
+                <div>
+                  <span class="eyebrow">اليوم</span>
+                  <h3>أنجزت اليوم</h3>
+                </div>
+                <span class="badge success">نشط</span>
+              </div>
+              <div class="rings-row">
+                <div class="ring-card"><canvas id="stepsRing"></canvas><strong id="stepsValue">0</strong><span>خطوة</span></div>
+                <div class="ring-card"><canvas id="caloriesRing"></canvas><strong id="caloriesValue">0</strong><span>سعرة</span></div>
+                <div class="ring-card"><canvas id="waterRing"></canvas><strong id="waterValue">0</strong><span>أكواب ماء</span></div>
+              </div>
+            </div>
+
+            <div class="panel quick-panel">
+              <div class="panel-header"><h3>ملخص سريع</h3></div>
+              <div class="stats-grid">
+                <div class="mini-stat"><span>النوم</span><strong id="sleepMetric">0 س</strong></div>
+                <div class="mini-stat"><span>النبض</span><strong id="heartMetric">0</strong></div>
+                <div class="mini-stat"><span>الوزن</span><strong id="weightMetric">0 كجم</strong></div>
+                <div class="mini-stat"><span>الهدف</span><strong id="goalMetric">—</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid two-three lower-grid">
+            <div class="panel">
+              <div class="panel-header">
+                <h3>سجل المؤشرات اليومية</h3>
+                <span class="badge info">Saved to DB</span>
+              </div>
+              <form id="dailyMetricsForm" class="form-grid">
+                <label>الخطوات<input type="number" id="stepsInput" min="0" /></label>
+                <label>السعرات<input type="number" id="caloriesInput" min="0" /></label>
+                <label>الماء (أكواب)<input type="number" id="waterInput" min="0" step="1" /></label>
+                <label>النوم (ساعات)<input type="number" id="sleepInput" min="0" step="0.5" /></label>
+                <label>الوزن<input type="number" id="weightInput" min="0" step="0.1" /></label>
+                <label>النبض<input type="number" id="heartInput" min="0" /></label>
+                <button class="primary-btn span-full" type="submit">حفظ اليوم</button>
+              </form>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header"><h3>توصيات ذكية</h3></div>
+              <div id="recommendations" class="stack"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="workouts" class="view app-view hidden">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>البرامج التدريبية</h3>
+              <button id="refreshWorkoutsBtn" class="ghost-btn">تحديث</button>
+            </div>
+            <div id="workoutsList" class="card-grid"></div>
+          </div>
+        </section>
+
+        <section id="nutrition" class="view app-view hidden">
+          <div class="grid two-three">
+            <div class="panel">
+              <div class="panel-header"><h3>إضافة وجبة</h3></div>
+              <form id="mealForm" class="form-grid">
+                <label>اسم الوجبة<input type="text" id="mealName" required /></label>
+                <label>البروتين<input type="number" id="proteinInput" min="0" required /></label>
+                <label>الكربوهيدرات<input type="number" id="carbsInput" min="0" required /></label>
+                <label>الدهون<input type="number" id="fatInput" min="0" required /></label>
+                <button class="primary-btn span-full" type="submit">حفظ الوجبة</button>
+              </form>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><h3>المغذيات اليوم</h3></div>
+              <canvas id="macrosChart" height="220"></canvas>
+              <div id="mealList" class="stack compact"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="progress" class="view app-view hidden">
+          <div class="grid two">
+            <div class="panel">
+              <div class="panel-header"><h3>اتجاه الخطوات والسعرات</h3></div>
+              <canvas id="progressLineChart" height="220"></canvas>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><h3>النوم والوزن</h3></div>
+              <canvas id="progressBarChart" height="220"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section id="subscription" class="view app-view hidden">
+          <div class="panel">
+            <div class="panel-header"><h3>اختر خطة الاشتراك</h3></div>
+            <div class="pricing-grid">
+              <article class="price-card">
+                <span class="eyebrow">Starter</span>
+                <h4>مجاني</h4>
+                <strong>0 ر.س</strong>
+                <ul>
+                  <li>تتبع أساسي</li>
+                  <li>سجل الوجبات</li>
+                  <li>إحصائيات بسيطة</li>
+                </ul>
+                <button class="ghost-btn" disabled>الخطة الحالية</button>
+              </article>
+              <article class="price-card featured">
+                <span class="eyebrow">Best Value</span>
+                <h4>Premium Monthly</h4>
+                <strong>49 ر.س / شهر</strong>
+                <ul>
+                  <li>خطط تدريب متقدمة</li>
+                  <li>تقارير أعمق</li>
+                  <li>أهداف مخصصة</li>
+                </ul>
+                <button class="primary-btn subscription-btn" data-plan="premium_monthly">اشترك الآن</button>
+              </article>
+              <article class="price-card">
+                <span class="eyebrow">Annual</span>
+                <h4>Premium Yearly</h4>
+                <strong>399 ر.س / سنة</strong>
+                <ul>
+                  <li>وفر أكثر</li>
+                  <li>تذكيرات ذكية</li>
+                  <li>أولوية الدعم</li>
+                </ul>
+                <button class="primary-btn subscription-btn" data-plan="premium_yearly">ابدأ السنوي</button>
+              </article>
+            </div>
+            <div class="message-box" id="subscriptionMsg"></div>
+          </div>
+        </section>
+
+        <section id="admin" class="view app-view hidden">
+          <div class="grid two">
+            <div class="panel">
+              <div class="panel-header"><h3>إدارة التمارين</h3></div>
+              <form id="workoutAdminForm" class="form-grid">
+                <label>اسم التمرين<input type="text" id="adminWorkoutName" required /></label>
+                <label>المدة بالدقائق<input type="number" id="adminWorkoutDuration" min="1" required /></label>
+                <label>الشدة
+                  <select id="adminWorkoutIntensity">
+                    <option value="low">منخفضة</option>
+                    <option value="medium">متوسطة</option>
+                    <option value="high">عالية</option>
+                  </select>
+                </label>
+                <label>السعرات المتوقعة<input type="number" id="adminWorkoutCalories" min="0" required /></label>
+                <button class="primary-btn span-full" type="submit">إضافة تمرين</button>
+              </form>
+              <div id="adminWorkoutsList" class="stack compact"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><h3>إدارة المستخدمين</h3></div>
+              <div id="adminUsersList" class="stack compact"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
