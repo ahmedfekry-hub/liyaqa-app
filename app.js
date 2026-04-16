@@ -617,14 +617,15 @@ async function completeWorkoutSession() {
 
   const saveResult = await persistWorkoutSession(sessionRecord);
   if (!saveResult.ok) {
-    els.workoutSessionMsg.textContent = 'تم إكمال الجلسة لكن تعذر حفظها في قاعدة البيانات. تم حفظها محليًا.';
+    els.workoutSessionMsg.textContent = `تم إكمال الجلسة لكن تعذر حفظها في قاعدة البيانات. السبب: ${saveResult.error?.message || 'غير معروف'} — تم حفظها محليًا.`;
+    state.workoutSessions = readLocalWorkoutSessions();
   } else {
     els.workoutSessionMsg.textContent = state.storageMode === 'local'
       ? 'تم حفظ الجلسة محليًا بنجاح.'
       : 'تم حفظ الجلسة في قاعدة البيانات بنجاح.';
+    await loadWorkoutSessions();
   }
 
-  await loadWorkoutSessions();
   await mergeSessionIntoDailyMetrics(burnedCalories, completedMinutes);
   state.activeWorkout = null;
   state.elapsedSeconds = 0;
@@ -649,9 +650,10 @@ async function persistWorkoutSession(sessionRecord) {
   console.warn('Saving workout session locally because DB insert failed:', error.message || error);
   state.storageMode = 'local';
   const local = readLocalWorkoutSessions();
-  local.unshift({ ...sessionRecord, created_at: new Date().toISOString() });
+  const fallbackRecord = { ...sessionRecord, id: crypto.randomUUID(), created_at: new Date().toISOString() };
+  local.unshift(fallbackRecord);
   localStorage.setItem(localWorkoutStorageKey(), JSON.stringify(local.slice(0, 20)));
-  return { ok: false, error };
+  return { ok: false, error, fallbackRecord };
 }
 
 async function mergeSessionIntoDailyMetrics(extraCalories, extraMinutes) {
