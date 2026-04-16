@@ -1,1 +1,1 @@
-Replace your current files with these updated files. Keep your working config.js values if already set. This version preserves local fallback workout sessions and shows clearer DB save failure messages.
+Replace app.js/index.html/styles.css/manifest.json/sw.js. Keep your working config.js if already configured. Then hard refresh the site.

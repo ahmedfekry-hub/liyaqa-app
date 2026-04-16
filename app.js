@@ -14,7 +14,7 @@ const state = {
   timerRunning: false,
   timerInterval: null,
   storageMode: 'database',
-  workoutFeedbackMessage: '',
+  flashMessage: '',
   charts: {}
 };
 
@@ -222,7 +222,8 @@ async function loadWorkoutSessions() {
   }
 
   state.storageMode = 'database';
-  state.workoutSessions = data || [];
+  const local = readLocalWorkoutSessions();
+  state.workoutSessions = (data && data.length ? data : local) || [];
 }
 
 async function maybeLoadAdminData() {
@@ -384,13 +385,9 @@ function renderWorkoutPlayer() {
   els.workoutPlayerActive.classList.toggle('hidden', !hasWorkout);
 
   if (!hasWorkout) {
-    if (state.workoutFeedbackMessage) {
-      els.workoutSessionMsg.textContent = state.workoutFeedbackMessage;
-    } else {
-      els.workoutSessionMsg.textContent = state.storageMode === 'local'
-        ? 'سيتم حفظ جلسات التمرين محليًا حتى تنشئ جدول workout_sessions.'
-        : 'اختر برنامجًا من الأسفل لبدء جلسة تفاعلية.';
-    }
+    els.workoutSessionMsg.textContent = state.flashMessage || (state.storageMode === 'local'
+      ? 'سيتم حفظ جلسات التمرين محليًا حتى تنشئ جدول workout_sessions.'
+      : 'اختر برنامجًا من الأسفل لبدء جلسة تفاعلية.');
     return;
   }
 
@@ -403,11 +400,11 @@ function renderWorkoutPlayer() {
   els.workoutProgressFill.style.width = `${progress}%`;
   els.workoutProgressText.textContent = `المتبقي ${formatTime(remainingSeconds)} • التقدم ${progress}%`;
   els.workoutMode.textContent = state.storageMode === 'local' ? 'حفظ محلي مؤقت' : 'حفظ مباشر في قاعدة البيانات';
-  els.workoutSessionMsg.textContent = state.timerRunning
+  els.workoutSessionMsg.textContent = state.flashMessage || (state.timerRunning
     ? 'الجلسة نشطة الآن — يمكنك الإيقاف المؤقت أو الإكمال والحفظ.'
     : state.elapsedSeconds
       ? 'الجلسة متوقفة مؤقتًا — يمكنك المتابعة أو الإنهاء.'
-      : 'ابدأ الجلسة لبدء المؤقت وتسجيل الأداء.';
+      : 'ابدأ الجلسة لبدء المؤقت وتسجيل الأداء.');
 
   els.startWorkoutBtn.classList.toggle('hidden', state.timerRunning);
   els.pauseWorkoutBtn.classList.toggle('hidden', !state.timerRunning);
@@ -539,11 +536,11 @@ function previewWorkout(id) {
   const workout = state.workouts.find(w => String(w.id) === String(id));
   if (!workout) return;
   stopTimer();
-  state.workoutFeedbackMessage = '';
   state.activeWorkout = workout;
   state.elapsedSeconds = 0;
   state.timerStartedAt = null;
   state.timerRunning = false;
+  state.flashMessage = '';
   renderWorkoutPlayer();
   smoothToPlayer();
 }
@@ -552,11 +549,11 @@ function startWorkoutById(id) {
   const workout = state.workouts.find(w => String(w.id) === String(id));
   if (!workout) return;
   stopTimer();
-  state.workoutFeedbackMessage = '';
   state.activeWorkout = workout;
   state.elapsedSeconds = 0;
   state.timerStartedAt = Date.now();
   state.timerRunning = true;
+  state.flashMessage = '';
   state.timerInterval = setInterval(updateTimer, 1000);
   renderWorkoutPlayer();
   smoothToPlayer();
@@ -623,29 +620,39 @@ async function completeWorkoutSession() {
   };
 
   const saveResult = await persistWorkoutSession(sessionRecord);
+  const finalRecord = { ...sessionRecord, id: saveResult.id || crypto.randomUUID?.() || String(Date.now()), created_at: new Date().toISOString() };
+
+  state.workoutSessions = [finalRecord, ...state.workoutSessions.filter(s => String(s.id) !== String(finalRecord.id))].slice(0, 20);
+
   if (!saveResult.ok) {
-    state.workoutFeedbackMessage = `تم إكمال الجلسة لكن تعذر حفظها في قاعدة البيانات. السبب: ${saveResult.error?.message || 'غير معروف'} — تم حفظها محليًا.`;
-    state.storageMode = 'local';
-    state.workoutSessions = [saveResult.fallbackRecord, ...state.workoutSessions].slice(0, 20);
+    state.flashMessage = `تم إكمال الجلسة لكن تعذر حفظها في قاعدة البيانات: ${saveResult.errorMessage || 'خطأ غير معروف'}. تم حفظها محليًا.`;
   } else {
-    state.workoutFeedbackMessage = state.storageMode === 'local'
+    state.flashMessage = state.storageMode === 'local'
       ? 'تم حفظ الجلسة محليًا بنجاح.'
       : 'تم حفظ الجلسة في قاعدة البيانات بنجاح.';
-    state.workoutSessions = [saveResult.record, ...state.workoutSessions].slice(0, 20);
   }
 
   await mergeSessionIntoDailyMetrics(burnedCalories, completedMinutes);
   state.activeWorkout = null;
   state.elapsedSeconds = 0;
   renderAll();
+
+  // حاول إعادة التحميل من القاعدة بعد الحفظ الناجح دون كسر العرض الحالي
+  if (saveResult.ok) {
+    setTimeout(async () => {
+      await loadWorkoutSessions();
+      renderWorkoutSessions();
+      renderDashboard();
+    }, 400);
+  }
 }
 
 function cancelWorkoutSession() {
   stopTimer();
   state.activeWorkout = null;
   state.elapsedSeconds = 0;
-  state.workoutFeedbackMessage = 'تم إلغاء الجلسة الحالية.';
-  els.workoutSessionMsg.textContent = state.workoutFeedbackMessage;
+  state.flashMessage = 'تم إلغاء الجلسة الحالية.';
+  els.workoutSessionMsg.textContent = state.flashMessage;
   renderWorkoutPlayer();
 }
 
@@ -653,21 +660,22 @@ async function persistWorkoutSession(sessionRecord) {
   const { data, error } = await supabaseClient
     .from('workout_sessions')
     .insert(sessionRecord)
-    .select('*')
+    .select('id, user_id, workout_id, workout_name, status, completed_minutes, burned_calories, started_at, ended_at, created_at')
     .single();
 
-  if (!error) {
+  if (!error && data) {
     state.storageMode = 'database';
-    return { ok: true, record: data || sessionRecord };
+    console.log('Workout session saved to DB:', data);
+    return { ok: true, id: data.id, data };
   }
 
-  console.warn('Saving workout session locally because DB insert failed:', error.message || error);
+  console.warn('Saving workout session locally because DB insert failed:', error?.message || error);
   state.storageMode = 'local';
   const local = readLocalWorkoutSessions();
-  const fallbackRecord = { ...sessionRecord, id: crypto.randomUUID(), created_at: new Date().toISOString() };
-  local.unshift(fallbackRecord);
+  const localRecord = { ...sessionRecord, id: crypto.randomUUID?.() || `local_${Date.now()}`, created_at: new Date().toISOString() };
+  local.unshift(localRecord);
   localStorage.setItem(localWorkoutStorageKey(), JSON.stringify(local.slice(0, 20)));
-  return { ok: false, error, fallbackRecord };
+  return { ok: false, error, errorMessage: error?.message, id: localRecord.id, data: localRecord };
 }
 
 async function mergeSessionIntoDailyMetrics(extraCalories, extraMinutes) {
@@ -688,6 +696,9 @@ async function mergeSessionIntoDailyMetrics(extraCalories, extraMinutes) {
   const { error } = await supabaseClient.from('daily_metrics').upsert(record, { onConflict: 'user_id,entry_date' });
   if (!error) {
     await loadDailyMetrics();
+    renderDashboard();
+  } else {
+    console.warn('daily_metrics merge failed:', error.message || error);
   }
 }
 
