@@ -30,7 +30,7 @@ const els = {
 init();
 
 async function init() {
-  if (!supabaseClient || cfg.supabaseUrl.includes('YOUR_')) {
+  if (!supabaseClient || !cfg || !cfg.supabaseUrl || !cfg.supabaseAnonKey || cfg.supabaseUrl.includes('YOUR_') || cfg.supabaseAnonKey.includes('YOUR_')) {
     els.authMsg.textContent = 'ضع مفاتيح Supabase داخل config.js أولاً ثم أعد تحميل الصفحة.';
     bindUi();
     return;
@@ -147,11 +147,19 @@ async function loadMeals() {
 }
 
 async function loadWorkouts() {
-  const { data } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from('workout_programs')
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Workout load error:', error);
+    state.workouts = [];
+    els.workoutsList.innerHTML = `<div class="muted">تعذر تحميل التمارين الآن.</div>`;
+    return;
+  }
+
   state.workouts = data || [];
   renderWorkouts();
 }
@@ -351,7 +359,11 @@ function updatePlanUi() {
 
 function switchView(view) {
   qsa('.nav-link').forEach(x => x.classList.toggle('active', x.dataset.view === view));
-  qsa('.app-view').forEach(v => v.classList.toggle('hidden', v.id !== view));
+  qsa('.app-view').forEach(v => {
+    const isTarget = v.id === view;
+    v.classList.toggle('hidden', !isTarget);
+    v.classList.toggle('active', isTarget);
+  });
   const label = { dashboard: 'لوحة اليوم', workouts: 'التمارين', nutrition: 'التغذية', progress: 'الإحصائيات', subscription: 'الاشتراك', admin: 'لوحة الإدارة' }[view] || 'لياقة';
   els.viewTitle.textContent = label;
 }

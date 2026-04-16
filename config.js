@@ -1,8 +1,9 @@
 window.LIYAQA_CONFIG = {
-  supabaseUrl: "https://gtlwondqiuevvnypjhxg.supabase.co",
-  supabaseAnonKey: "sb_publishable_S0bWTJiIxao6IX18420YyQ_lg6A-YNt",
+  supabaseUrl: "YOUR_SUPABASE_URL",
+  supabaseAnonKey: "YOUR_SUPABASE_ANON_KEY",
   stripeLinks: {
-    premium_monthly: "",
-    premium_yearly: ""
-  }
+    premium_monthly: "https://buy.stripe.com/test_monthly_link",
+    premium_yearly: "https://buy.stripe.com/test_yearly_link"
+  },
+  appName: "لياقة"
 };
