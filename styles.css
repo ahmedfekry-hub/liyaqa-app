@@ -84,3 +84,17 @@ body.dark .sidebar{background:rgba(15,23,42,.7)}
   .player-summary{flex-direction:column;align-items:stretch}
   .timer-box{min-width:0}
 }
+
+
+.phase-shell{border:1px solid var(--line);background:var(--soft);border-radius:22px;padding:16px;margin-bottom:16px}
+.phase-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.phase-main h4{margin:0 0 6px;font-size:24px}
+.plan-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.plan-step{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.45)}
+body.dark .plan-step{background:rgba(15,23,42,.35)}
+.plan-step.current{border-color:rgba(37,99,235,.35);box-shadow:0 0 0 1px rgba(37,99,235,.18) inset}
+.plan-step.done{opacity:.78}
+.plan-step-tag{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;background:linear-gradient(135deg,var(--emerald),var(--blue));color:#fff;font-size:12px;font-weight:800;flex:0 0 28px}
+@media (max-width: 1100px){
+  .plan-steps{grid-template-columns:1fr}
+}
