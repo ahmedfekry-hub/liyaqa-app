@@ -1,14 +1,23 @@
-هذه النسخة مصححة لمشكلة عدم ظهور صفحات التمارين/التغذية/الإحصائيات.
+Liyaqa Interactive Workout Upgrade
 
-ما تم إصلاحه:
-1) إصلاح التنقل بين الصفحات في app.js بحيث يتم تفعيل الصفحة المختارة فعليًا.
-2) إضافة معالجة واضحة لأخطاء تحميل التمارين.
-3) الإبقاء على القراءة من جدول workout_programs كما هو.
+Files included:
+- index.html
+- app.js
+- styles.css
+- manifest.json
+- sw.js
+- config.js
+- workout_sessions.sql
 
-مهم:
-- ملف config.js الحالي ما زال يحتوي على placeholders إذا لم تكن قد وضعت قيم Supabase الحقيقية.
-- لكي تعمل النسخة بعد الرفع، يجب أن يحتوي config.js على:
-  supabaseUrl
-  supabaseAnonKey (publishable key)
+What changed:
+- Interactive workout player
+- Start / pause / complete / cancel workout session
+- Session saving to Supabase if workout_sessions table exists
+- Automatic local-storage fallback if the table does not exist yet
+- Recent workout sessions panel
+- Dashboard summary adds completed sessions and active minutes
 
-إذا كانت قيمك الحقيقية موجودة بالفعل على نسختك العاملة في Netlify، انسخ نفس config.js الحقيقي وضعه داخل هذه الحزمة قبل الرفع.
+Recommended:
+1. Keep your existing working config.js if it already contains the real Supabase values.
+2. Replace index.html, app.js, styles.css, manifest.json, sw.js.
+3. Run workout_sessions.sql in Supabase SQL Editor to enable DB saving for workout sessions.

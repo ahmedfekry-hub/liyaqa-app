@@ -133,6 +133,8 @@
                 <div class="mini-stat"><span>النبض</span><strong id="heartMetric">0</strong></div>
                 <div class="mini-stat"><span>الوزن</span><strong id="weightMetric">0 كجم</strong></div>
                 <div class="mini-stat"><span>الهدف</span><strong id="goalMetric">—</strong></div>
+                <div class="mini-stat"><span>الجلسات المكتملة</span><strong id="completedSessionsMetric">0</strong></div>
+                <div class="mini-stat"><span>الدقائق النشطة</span><strong id="activeMinutesMetric">0 د</strong></div>
               </div>
             </div>
           </div>
@@ -162,12 +164,60 @@
         </section>
 
         <section id="workouts" class="view app-view hidden">
-          <div class="panel">
-            <div class="panel-header">
-              <h3>البرامج التدريبية</h3>
-              <button id="refreshWorkoutsBtn" class="ghost-btn">تحديث</button>
+          <div class="grid two-three workouts-grid">
+            <div class="panel player-panel" id="workoutPlayer">
+              <div class="panel-header">
+                <h3>التمرين التفاعلي</h3>
+                <span id="workoutMode" class="badge info">جاهز</span>
+              </div>
+
+              <div id="workoutPlayerEmpty" class="player-empty">
+                <div class="empty-icon">⏱️</div>
+                <h4>اختر برنامجًا لبدء الجلسة</h4>
+                <p class="muted">من هنا يمكنك تشغيل المؤقت، إيقافه مؤقتًا، ثم حفظ الجلسة في قاعدة البيانات أو محليًا إذا لم يكن جدول الجلسات جاهزًا بعد.</p>
+              </div>
+
+              <div id="workoutPlayerActive" class="hidden">
+                <div class="player-summary">
+                  <div>
+                    <span class="eyebrow">البرنامج الحالي</span>
+                    <h4 id="workoutPlayerTitle">—</h4>
+                    <div id="workoutPlayerMeta" class="muted">—</div>
+                  </div>
+                  <div class="timer-box">
+                    <span class="muted">الوقت المنقضي</span>
+                    <strong id="workoutTimer">00:00:00</strong>
+                  </div>
+                </div>
+
+                <div class="progress-shell">
+                  <div id="workoutProgressFill" class="progress-fill"></div>
+                </div>
+                <div id="workoutProgressText" class="muted">المتبقي 00:00:00 • التقدم 0%</div>
+
+                <div class="player-actions">
+                  <button id="startWorkoutBtn" class="primary-btn">ابدأ / متابعة</button>
+                  <button id="pauseWorkoutBtn" class="ghost-btn hidden">إيقاف مؤقت</button>
+                  <button id="completeWorkoutBtn" class="ghost-btn">إنهاء وحفظ</button>
+                  <button id="cancelWorkoutBtn" class="ghost-btn danger-btn">إلغاء</button>
+                </div>
+              </div>
+
+              <div id="workoutSessionMsg" class="message-box"></div>
             </div>
-            <div id="workoutsList" class="card-grid"></div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <h3>البرامج التدريبية</h3>
+                <button id="refreshWorkoutsBtn" class="ghost-btn">تحديث</button>
+              </div>
+              <div id="workoutsList" class="card-grid"></div>
+            </div>
+          </div>
+
+          <div class="panel sessions-panel">
+            <div class="panel-header"><h3>آخر الجلسات المسجلة</h3></div>
+            <div id="recentWorkoutSessions" class="card-grid"></div>
           </div>
         </section>
 

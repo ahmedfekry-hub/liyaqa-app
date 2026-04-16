@@ -58,3 +58,29 @@ body.dark .sidebar{background:rgba(15,23,42,.7)}
 .price-card h4{margin:0 0 10px;font-size:24px}.price-card strong{font-size:30px}.price-card ul{padding-right:18px;line-height:1.9}
 .recommendation-card strong{display:block;margin-bottom:6px}
 @media (max-width: 1100px){.app-shell{grid-template-columns:1fr}.sidebar{border-left:none;border-bottom:1px solid var(--line)}.auth-grid,.grid.two-three,.grid.two,.pricing-grid{grid-template-columns:1fr}.rings-row{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}}
+
+
+.badge.warning{background:rgba(245,158,11,.14);color:var(--warning)}
+.badge.soft{background:rgba(148,163,184,.14);color:var(--muted)}
+.workouts-grid{align-items:start}
+.player-panel{position:sticky;top:24px}
+.player-empty{display:grid;gap:12px;justify-items:start;padding:8px 0}
+.empty-icon{width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(37,99,235,.12));display:grid;place-items:center;font-size:26px}
+.player-summary{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
+.timer-box{min-width:180px;padding:16px 18px;border-radius:20px;background:var(--soft);border:1px solid var(--line);text-align:center}
+.timer-box strong{display:block;font-size:34px;margin-top:8px;letter-spacing:.04em}
+.progress-shell{height:14px;background:var(--soft);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:18px 0 10px}
+.progress-fill{height:100%;width:0;background:linear-gradient(135deg,var(--emerald),var(--blue));transition:width .35s ease}
+.player-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.danger-btn{border:1px solid rgba(239,68,68,.3);color:var(--danger)}
+.workout-topline,.session-topline,.workout-actions{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.workout-topline{margin-bottom:10px}
+.workout-actions{margin-top:14px;flex-wrap:wrap}
+.workout-card .primary-btn,.workout-card .ghost-btn{padding:10px 14px;border-radius:14px}
+.sessions-panel{margin-top:18px}
+.session-card{border:1px solid var(--line);border-radius:20px;background:var(--soft);padding:16px}
+@media (max-width: 1100px){
+  .player-panel{position:static}
+  .player-summary{flex-direction:column;align-items:stretch}
+  .timer-box{min-width:0}
+}
